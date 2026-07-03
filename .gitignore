@@ -1,0 +1,52 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Environment configuration
+.env
+.env.local
+.env.*.local
+
+# Packaging
+build/
+dist/
+*.egg-info/
+
+# Test and coverage output
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+
+# Type checking and linting
+.mypy_cache/
+.ruff_cache/
+
+# Application runtime files
+data/
+storage/
+uploads/
+transcripts/
+models/
+*.log
+
+# IDEs and editors
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Operating systems
+.DS_Store
+Thumbs.db
+
+# Jupyter
+.ipynb_checkpoints/
