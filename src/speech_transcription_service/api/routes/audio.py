@@ -1,6 +1,3 @@
-from __future__ import annotations
-
-import hashlib
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Annotated, cast
@@ -12,17 +9,13 @@ from speech_transcription_service.api.schemas import (
     AudioInspectionResponse,
     ErrorResponse,
 )
+from speech_transcription_service.api.upload import stage_upload
 from speech_transcription_service.application.audio_ingestion import (
     AudioIngestionService,
-    StagedUpload,
     validate_upload_metadata,
 )
 from speech_transcription_service.config import Settings
 from speech_transcription_service.domain.audio import AudioProbe
-from speech_transcription_service.domain.errors import (
-    EmptyFileError,
-    FileTooLargeError,
-)
 
 router = APIRouter(prefix="/audio", tags=["Audio"])
 
@@ -60,7 +53,7 @@ async def inspect_audio(
 
     try:
         with TemporaryDirectory(prefix="sts-upload-") as temp_directory:
-            staged_upload = await _stage_upload(
+            staged_upload = await stage_upload(
                 file=file,
                 temporary_directory=Path(temp_directory),
                 settings=settings,
@@ -76,49 +69,3 @@ async def inspect_audio(
             return AudioInspectionResponse.model_validate(inspection)
     finally:
         await file.close()
-
-
-async def _stage_upload(
-    file: UploadFile,
-    temporary_directory: Path,
-    settings: Settings,
-) -> StagedUpload:
-    filename = file.filename or "upload"
-    suffix = Path(filename).suffix.lower()
-    staged_path = temporary_directory / f"source{suffix}"
-
-    checksum = hashlib.sha256()
-    size_bytes = 0
-
-    with staged_path.open("wb") as destination:
-        while True:
-            chunk = await file.read(settings.upload_chunk_bytes)
-
-            if not chunk:
-                break
-
-            size_bytes += len(chunk)
-
-            if size_bytes > settings.max_upload_bytes:
-                raise FileTooLargeError(
-                    "The uploaded file exceeds the configured "
-                    f"{settings.max_upload_bytes}-byte limit."
-                )
-
-            checksum.update(chunk)
-
-            await run_in_threadpool(
-                destination.write,
-                chunk,
-            )
-
-    if size_bytes == 0:
-        raise EmptyFileError()
-
-    return StagedUpload(
-        path=staged_path,
-        filename=filename,
-        content_type=file.content_type,
-        size_bytes=size_bytes,
-        sha256=checksum.hexdigest(),
-    )

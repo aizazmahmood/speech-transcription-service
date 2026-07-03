@@ -1,5 +1,6 @@
 from enum import StrEnum
 from functools import lru_cache
+from pathlib import Path
 
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -52,6 +53,22 @@ class Settings(BaseSettings):
         ge=1,
         le=1,
     )
+
+    transcription_model_name: str = "small"
+    transcription_device: str = "cpu"
+    transcription_compute_type: str = "int8"
+
+    transcription_cpu_threads: int = Field(
+        default=0,
+        ge=0,
+    )
+    transcription_num_workers: int = Field(
+        default=1,
+        ge=1,
+    )
+
+    transcription_download_root: Path | None = None
+    transcription_local_files_only: bool = False
 
     model_config = SettingsConfigDict(
         env_file=".env",
