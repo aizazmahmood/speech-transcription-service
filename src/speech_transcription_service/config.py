@@ -1,6 +1,7 @@
 from enum import StrEnum
 from functools import lru_cache
 
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from speech_transcription_service import __version__
@@ -19,6 +20,38 @@ class Settings(BaseSettings):
     environment: Environment = Environment.LOCAL
     api_prefix: str = "/api/v1"
     docs_enabled: bool = True
+
+    max_upload_bytes: int = Field(
+        default=100 * 1024 * 1024,
+        gt=0,
+    )
+    upload_chunk_bytes: int = Field(
+        default=1024 * 1024,
+        gt=0,
+    )
+
+    ffprobe_path: str = "ffprobe"
+    ffprobe_timeout_seconds: float = Field(
+        default=30.0,
+        gt=0,
+    )
+
+    ffmpeg_path: str = "ffmpeg"
+    ffmpeg_timeout_seconds: float = Field(
+        default=300.0,
+        gt=0,
+    )
+
+    normalized_sample_rate_hz: int = Field(
+        default=16_000,
+        gt=0,
+    )
+
+    normalized_channels: int = Field(
+        default=1,
+        ge=1,
+        le=1,
+    )
 
     model_config = SettingsConfigDict(
         env_file=".env",
