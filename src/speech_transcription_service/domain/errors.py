@@ -63,3 +63,21 @@ class AudioNormalizationError(ServiceError):
     code = "AUDIO_NORMALIZATION_FAILED"
     status_code = 500
     default_message = "The audio file could not be normalized."
+
+
+class NormalizedAudioContractError(ServiceError):
+    code = "NORMALIZED_AUDIO_CONTRACT_VIOLATION"
+    status_code = 500
+    default_message = "Normalized audio does not match the transcription input contract."
+
+
+class TranscriptionDependencyUnavailableError(ServiceError):
+    code = "TRANSCRIPTION_DEPENDENCY_UNAVAILABLE"
+    status_code = 503
+    default_message = "The transcription engine is unavailable."
+
+
+class TranscriptionError(ServiceError):
+    code = "TRANSCRIPTION_FAILED"
+    status_code = 500
+    default_message = "The audio could not be transcribed."
