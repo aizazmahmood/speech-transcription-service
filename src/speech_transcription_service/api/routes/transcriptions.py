@@ -2,7 +2,13 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Annotated, cast
 
-from fastapi import APIRouter, File, Form, Request, UploadFile
+from fastapi import (
+    APIRouter,
+    File,
+    Form,
+    Request,
+    UploadFile,
+)
 from starlette.concurrency import run_in_threadpool
 
 from speech_transcription_service.api.schemas import (
@@ -13,18 +19,21 @@ from speech_transcription_service.api.schemas import (
     UploadMetadataResponse,
 )
 from speech_transcription_service.api.upload import stage_upload
+from speech_transcription_service.application.adaptive_transcription import (
+    AdaptiveTranscriptionPipeline,
+)
 from speech_transcription_service.application.audio_ingestion import (
     validate_upload_metadata,
-)
-from speech_transcription_service.application.transcription import (
-    TranscriptionPipeline,
 )
 from speech_transcription_service.config import Settings
 from speech_transcription_service.domain.transcription import (
     TranscriptionOptions,
 )
 
-router = APIRouter(prefix="/transcriptions", tags=["Transcriptions"])
+router = APIRouter(
+    prefix="/transcriptions",
+    tags=["Transcriptions"],
+)
 
 
 @router.post(
@@ -32,17 +41,29 @@ router = APIRouter(prefix="/transcriptions", tags=["Transcriptions"])
     response_model=TranscriptionResponse,
     summary="Transcribe an uploaded audio file",
     responses={
-        400: {"model": ErrorResponse, "description": "Empty upload"},
-        413: {"model": ErrorResponse, "description": "Upload is too large"},
-        415: {"model": ErrorResponse, "description": "Unsupported media"},
-        422: {"model": ErrorResponse, "description": "Invalid audio"},
+        400: {
+            "model": ErrorResponse,
+            "description": "Empty upload",
+        },
+        413: {
+            "model": ErrorResponse,
+            "description": "Upload is too large",
+        },
+        415: {
+            "model": ErrorResponse,
+            "description": "Unsupported media",
+        },
+        422: {
+            "model": ErrorResponse,
+            "description": "Invalid audio",
+        },
         500: {
             "model": ErrorResponse,
-            "description": "Media processing or transcription failed",
+            "description": ("Media processing or transcription failed"),
         },
         503: {
             "model": ErrorResponse,
-            "description": "Required dependency is unavailable",
+            "description": ("Required dependency is unavailable"),
         },
         504: {
             "model": ErrorResponse,
@@ -73,11 +94,17 @@ async def create_transcription(
         Form(),
     ] = False,
 ) -> TranscriptionResponse:
-    validate_upload_metadata(file.filename, file.content_type)
+    validate_upload_metadata(
+        file.filename,
+        file.content_type,
+    )
 
-    settings = cast(Settings, request.app.state.settings)
+    settings = cast(
+        Settings,
+        request.app.state.settings,
+    )
     pipeline = cast(
-        TranscriptionPipeline,
+        AdaptiveTranscriptionPipeline,
         request.app.state.transcription_pipeline,
     )
 
@@ -89,7 +116,9 @@ async def create_transcription(
     )
 
     try:
-        with TemporaryDirectory(prefix="sts-transcription-") as temp_directory:
+        with TemporaryDirectory(
+            prefix="sts-transcription-",
+        ) as temp_directory:
             temporary_path = Path(temp_directory)
 
             staged_upload = await stage_upload(
@@ -106,9 +135,16 @@ async def create_transcription(
             )
 
             transcript = result.transcript
+
             real_time_factor = (
                 transcript.processing_seconds / transcript.duration_seconds
                 if transcript.duration_seconds > 0
+                else None
+            )
+
+            normalized_audio = (
+                ProbedAudioResponse.model_validate(result.normalized_audio)
+                if result.normalized_audio is not None
                 else None
             )
 
@@ -119,9 +155,11 @@ async def create_transcription(
                     size_bytes=staged_upload.size_bytes,
                     sha256=staged_upload.sha256,
                 ),
-                source_audio=ProbedAudioResponse.model_validate(result.source_audio),
-                normalized_audio=ProbedAudioResponse.model_validate(result.normalized_audio),
-                transcript=TranscriptResponse.model_validate(transcript),
+                source_audio=(ProbedAudioResponse.model_validate(result.source_audio)),
+                normalized_audio=normalized_audio,
+                transcript=(TranscriptResponse.model_validate(transcript)),
+                mode=result.mode,
+                chunk_count=result.chunk_count,
                 real_time_factor=real_time_factor,
             )
     finally:

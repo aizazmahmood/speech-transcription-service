@@ -1,5 +1,9 @@
 from pydantic import BaseModel, ConfigDict, Field
 
+from speech_transcription_service.domain.transcription import (
+    TranscriptionMode,
+)
+
 
 class AttributeResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -28,21 +32,31 @@ class AudioInspectionResponse(ProbedAudioResponse):
     filename: str
     content_type: str | None
     size_bytes: int = Field(ge=1)
-    sha256: str = Field(min_length=64, max_length=64)
+    sha256: str = Field(
+        min_length=64,
+        max_length=64,
+    )
 
 
 class UploadMetadataResponse(BaseModel):
     filename: str
     content_type: str | None
     size_bytes: int = Field(ge=1)
-    sha256: str = Field(min_length=64, max_length=64)
+    sha256: str = Field(
+        min_length=64,
+        max_length=64,
+    )
 
 
 class TranscriptWordResponse(AttributeResponse):
     start_seconds: float = Field(ge=0)
     end_seconds: float = Field(ge=0)
     text: str
-    probability: float | None = Field(default=None, ge=0, le=1)
+    probability: float | None = Field(
+        default=None,
+        ge=0,
+        le=1,
+    )
 
 
 class TranscriptSegmentResponse(AttributeResponse):
@@ -70,6 +84,11 @@ class TranscriptResponse(AttributeResponse):
 class TranscriptionResponse(BaseModel):
     upload: UploadMetadataResponse
     source_audio: ProbedAudioResponse
-    normalized_audio: ProbedAudioResponse
+    normalized_audio: ProbedAudioResponse | None
     transcript: TranscriptResponse
-    real_time_factor: float | None = Field(default=None, ge=0)
+    mode: TranscriptionMode
+    chunk_count: int = Field(ge=1)
+    real_time_factor: float | None = Field(
+        default=None,
+        ge=0,
+    )

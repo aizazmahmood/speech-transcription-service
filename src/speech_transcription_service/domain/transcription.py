@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from enum import StrEnum
 from pathlib import Path
 from typing import Protocol
 
@@ -92,6 +93,36 @@ class TranscriptionPipelineResult:
     source_audio: ProbedAudio
     normalized_audio: ProbedAudio
     transcript: TranscriptionResult
+
+
+class TranscriptionMode(StrEnum):
+    DIRECT = "direct"
+    CHUNKED = "chunked"
+
+
+@dataclass(frozen=True, slots=True)
+class TranscriptionExecutionResult:
+    source_audio: ProbedAudio
+    normalized_audio: ProbedAudio | None
+    transcript: TranscriptionResult
+    mode: TranscriptionMode
+    chunk_count: int
+
+    def __post_init__(self) -> None:
+        if self.chunk_count < 1:
+            raise ValueError("Transcription chunk count must be at least one.")
+
+        if self.mode is TranscriptionMode.DIRECT:
+            if self.normalized_audio is None:
+                raise ValueError("Direct transcription requires normalized audio metadata.")
+
+            if self.chunk_count != 1:
+                raise ValueError("Direct transcription must report exactly one chunk.")
+
+        if self.mode is TranscriptionMode.CHUNKED and self.normalized_audio is not None:
+            raise ValueError(
+                "Chunked transcription cannot report one complete normalized audio file."
+            )
 
 
 class TranscriptionEngine(Protocol):
