@@ -47,6 +47,15 @@ The production design for concurrent uploads, persistent jobs, worker recovery,
 storage, and retries will be documented separately from the functionality implemented
 in this repository.
 
+## Production system design
+
+The production architecture is documented in
+[docs/system-design.md](docs/system-design.md).
+
+It covers concurrent uploads, object storage, database-backed job state, queues,
+background workers, retries, crash recovery, status APIs, retention, security,
+observability, and scaling.
+
 ## Implemented request flow
 
 ```mermaid
