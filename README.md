@@ -724,6 +724,9 @@ ruff format --check .
 mypy
 ```
 
+The development dependency set intentionally uses `httpx2` for the FastAPI/Starlette
+test client path.
+
 The current suite covers:
 
 - health endpoints
