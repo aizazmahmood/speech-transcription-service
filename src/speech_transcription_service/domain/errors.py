@@ -65,6 +65,18 @@ class AudioNormalizationError(ServiceError):
     default_message = "The audio file could not be normalized."
 
 
+class AudioChunkExtractionTimeoutError(ServiceError):
+    code = "AUDIO_CHUNK_EXTRACTION_TIMEOUT"
+    status_code = 504
+    default_message = "Audio chunk extraction exceeded the configured timeout."
+
+
+class AudioChunkExtractionError(ServiceError):
+    code = "AUDIO_CHUNK_EXTRACTION_FAILED"
+    status_code = 500
+    default_message = "The requested audio chunk could not be extracted."
+
+
 class NormalizedAudioContractError(ServiceError):
     code = "NORMALIZED_AUDIO_CONTRACT_VIOLATION"
     status_code = 500

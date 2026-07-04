@@ -47,7 +47,6 @@ class Settings(BaseSettings):
         default=16_000,
         gt=0,
     )
-
     normalized_channels: int = Field(
         default=1,
         ge=1,
@@ -69,6 +68,19 @@ class Settings(BaseSettings):
 
     transcription_download_root: Path | None = None
     transcription_local_files_only: bool = False
+
+    transcription_chunking_threshold_seconds: float = Field(
+        default=600.0,
+        gt=0,
+    )
+    transcription_chunk_duration_seconds: float = Field(
+        default=300.0,
+        gt=0,
+    )
+    transcription_chunk_overlap_seconds: float = Field(
+        default=5.0,
+        ge=0,
+    )
 
     model_config = SettingsConfigDict(
         env_file=".env",
