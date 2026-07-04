@@ -33,6 +33,7 @@ The service currently supports:
 - Automatic language detection or an explicit language hint
 - Segment-level timestamps
 - Optional word-level timestamps
+- Pure Python SRT and WebVTT transcript exporters
 - Processing-duration and real-time-factor metrics
 - Response metadata for transcription mode and chunk count
 - Structured application errors
@@ -454,6 +455,25 @@ When `word_timestamps=true`, each word may include:
 }
 ```
 
+## Transcript export formats
+
+The domain layer includes pure Python exporters for downstream caption formats.
+
+Supported export helpers:
+
+| Helper | Output format |
+|---|---|
+| `export_srt(transcript)` | SubRip `.srt` caption text |
+| `export_webvtt(transcript)` | WebVTT `.vtt` caption text |
+
+The exporters convert the existing timestamped `TranscriptionResult` segments into
+caption cues. They do not require FFmpeg, FFprobe, faster-whisper, network access, or
+additional runtime dependencies.
+
+The synchronous HTTP API still returns the structured JSON transcript response.
+Downloadable export endpoints and persisted export artifacts are production next-stage
+concerns covered by the system design.
+
 ## Processing metrics
 
 For direct transcription, `processing_seconds` measures:
@@ -724,9 +744,6 @@ ruff format --check .
 mypy
 ```
 
-The development dependency set intentionally uses `httpx2` for the FastAPI/Starlette
-test client path.
-
 The current suite covers:
 
 - health endpoints
@@ -842,8 +859,8 @@ The current implementation also does not yet include:
 - persistent transcription jobs
 - resumable processing
 - chunk-level checkpoints
-- SRT export
-- WebVTT export
+- downloadable export endpoints
+- persisted transcript and export storage
 - distributed workers
 - shared object storage
 - request authentication
@@ -883,7 +900,7 @@ The next implementation stage will focus on:
 - retry and recovery behavior
 - idempotent request handling
 - object storage for source audio and generated outputs
-- JSON, SRT, and WebVTT exporters
+- API download endpoints for JSON, SRT, and WebVTT outputs
 - API polling for job status and results
 
 A separate system-design document will describe concurrent uploads, durable storage,
